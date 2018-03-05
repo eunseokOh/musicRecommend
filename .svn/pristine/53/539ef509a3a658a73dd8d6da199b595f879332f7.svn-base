@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<mapper namespace="net.musicrecommend.www.recommend.RecommendMapper">	
+	<insert id="insertRecommend" parameterType="RecommendVO">
+		insert into tb_recommend(user_no, album_key, song_key, artist_key, star_point, comment)
+		values(#{user_no},#{album_key},#{song_key},#{artist_key},#{star_point},#{comment})
+		
+	</insert>
+	<update id="updateRecommend" parameterType="RecommendVO">
+		update tb_recommend set star_point=#{star_point}, comment=#{comment}
+		where user_no = #{user_no} and song_key = #{song_key}
+	</update>
+	<select id="checkRecommendExist" parameterType="RecommendVO" resultType="int">
+		select count(user_no) as cnt from tb_recommend
+		where user_no = #{user_no} and song_key = #{song_key}
+	</select>
+	<select id="getSong" resultType="SongVO" parameterType="Long">
+		select song_no, song_key, song_name, album_key, artist_key, 
+				artist_name, play_time, issue_date, is_title_song, is_hit_song, 
+				is_adult, is_free, composition, lyricist, album_name
+		from tb_song
+		where song_key = #{song_key};
+	</select>
+	
+	<!-- 기본 노래리스트 -->
+	<select id="getTotalCount" resultType="Long">
+		select count(song_no) as cnt from tb_song		
+	</select>
+	<select id="getDefaultSongList" resultType="SongVO" parameterType="PageNation">
+	select b.*
+		from (select a.*
+			  from (select @rownum:=@rownum+1 as rownum, u.* 
+				 	  from tb_song u join (select @rownum:=0) T
+				 	  order by u.song_no desc) a) b
+		where rownum between #{start_num} and #{end_num}; 
+	</select>
+
+</mapper>
+ 
+ 

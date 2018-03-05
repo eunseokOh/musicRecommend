@@ -1,0 +1,199 @@
+package net.musicrecommend.www.operation;
+
+import java.util.List;
+import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import net.musicrecommend.www.util.MashupPicker;
+import net.musicrecommend.www.util.PagedAlbumList;
+import net.musicrecommend.www.vo.AlbumVO;
+import net.musicrecommend.www.vo.ArtistVO;
+import net.musicrecommend.www.vo.GenreVO;
+import net.musicrecommend.www.vo.SongVO;
+
+@Controller
+@RequestMapping("operation")
+public class OperationController {
+	
+	@Autowired
+	OperationService operationService;
+	
+	private static final Logger logger = LoggerFactory.getLogger(OperationController.class);
+	
+	
+	// 가수 정보 리스트
+		@RequestMapping(value = "artist/{page}", method = RequestMethod.GET)
+		public String artistRead(Model model, @RequestParam(required = false, defaultValue = "ioi") String searchKeyword,
+				@PathVariable int page) {
+			MashupPicker picker = new MashupPicker();
+			model.addAttribute("list", picker.getArtistList(page,10, searchKeyword));
+			model.addAttribute("page", page);
+			return "operation/artist";
+		}
+
+		// 가수 정보 입력
+		@RequestMapping(value = "artist/{page}", method = RequestMethod.POST, produces = "text/plain")
+		@ResponseBody
+		public String artistInsert(@ModelAttribute ArtistVO artistVO) throws Exception {
+			logger.info("artistVO:" + artistVO);
+			boolean isJoined = operationService.checkArtistId(artistVO);
+			if(isJoined){			
+				return "existid";
+			}else{
+				operationService.insertArtist(artistVO);
+				return "success";			
+			}
+		}
+
+		// 앨범 정보 리스트
+		@RequestMapping(value = "album/{page}", method = RequestMethod.GET)
+		public String albumRead(Model model, @RequestParam(required = false, defaultValue = "kim") String searchKeyword,
+				@PathVariable int page) {
+			MashupPicker picker = new MashupPicker();
+			PagedAlbumList pagedAlbumList = picker.getAlbumList(page,10, searchKeyword);
+			if(pagedAlbumList!=null){
+				model.addAttribute("list", pagedAlbumList.getList());
+				model.addAttribute("pageNation", pagedAlbumList.getPageNation());
+				model.addAttribute("page", page);
+			}else{
+				
+			}
+			return "operation/album";
+		}
+
+		// 앨범 정보 입력
+		@RequestMapping(value = "album/{page}", method = RequestMethod.POST,produces = "text/plain")
+		@ResponseBody
+		public String albumInsert(@ModelAttribute AlbumVO albumVO) throws Exception {
+			logger.info("artistVO:" + albumVO);
+			boolean isJoined = operationService.checkAlbumId(albumVO);
+			if(isJoined){			
+				return "existid";
+			}else{
+				operationService.insertAlbum(albumVO);
+				return "success";			
+			}
+		}
+	
+	@RequestMapping(value="test/{searchKeyword}", method=RequestMethod.GET)
+	public String test(Model model,
+			@PathVariable String searchKeyword){
+		MashupPicker picker = new MashupPicker();
+		model.addAttribute("test",picker.getAlbumList(1, 10,searchKeyword));
+//		model.addAttribute("test",picker.getAlbumList(1, searchKeyword));
+		//model.addAttribute("test",picker.getArtistList(1, searchKeyword));
+		//model.addAttribute("test",picker.getArtistProfileURL("686920"));
+		//model.addAttribute("test",picker.getLyrics("8173044"));
+		//model.addAttribute("test",picker.getLyrics("8173044"));
+		
+		//model.addAttribute("test",picker.getSongList(0, "pick me"));
+		return "operation/test";
+		
+	}
+	
+	@RequestMapping(value="song", method = RequestMethod.GET)
+	public String Song(){
+		return "operation/song";
+	}
+	
+	
+	@RequestMapping(value="song/{searchKeyword}")
+	@ResponseBody
+	public Map<String, Object> listSong(@PathVariable String searchKeyword, @RequestParam(defaultValue="1") long page, Model model) {
+		MashupPicker picker = new MashupPicker();
+		
+		Map<String, Object> mapData =  picker.getSongList(page, 21,searchKeyword);
+		
+		
+		return mapData;
+	}
+	
+	@RequestMapping(value="song/insert", produces="Application/json; charset=UTF-8")
+	@ResponseBody
+	public String insertSong(@ModelAttribute SongVO songVO) {
+		
+		String msg = "";
+		
+		try {
+			long checkSong = operationService.checkSong(songVO.getSong_key());
+			System.out.println("checkSong : "+checkSong);
+			
+			if(checkSong == 0){
+				operationService.insertSong(songVO);
+				msg = "DB 저장 성공!";
+			} else {
+				msg = "이미 등록되었습니다.";
+			}
+			
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		System.out.println("msg : " + msg);
+		return msg;
+	}
+	
+	@RequestMapping(value="testNew", produces="Application/json; charset=UTF-8")
+	@ResponseBody
+	public Map<String, Object> testNew(){
+		MashupPicker mashupPicker = new MashupPicker();
+		
+		Map<String, Object> mapData = mashupPicker.getTop100GenreSongChartList(1, 50, "DP0000");
+		
+		return mapData;
+	}
+	
+	@RequestMapping(value="chartList", method=RequestMethod.GET)
+	public void chartList(Model model){
+		MashupPicker mashupPicker = new MashupPicker();
+		
+		Map<String, Object> mapData = null;
+		
+		List<GenreVO> genreVO;
+		try {
+			genreVO = operationService.getGenreList();
+			mapData = mashupPicker.getTop100GenreSongChartList(1, 21, "DP0000");
+			mapData.put("genreVO", genreVO);
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		model.addAttribute("mapData", mapData);
+		
+	}
+	
+	@RequestMapping(value="chartList/{genre_key}", produces="Application/json; charset=UTF-8", method=RequestMethod.POST)
+	@ResponseBody
+	public Map<String, Object> chartList(@PathVariable String genre_key, @RequestParam(defaultValue="1") int page){
+	MashupPicker mashupPicker = new MashupPicker();
+		
+		Map<String, Object> mapData = null;
+		System.out.println("genre_key : " + genre_key);
+		List<GenreVO> genreVO;
+		try {
+			genreVO = operationService.getGenreList();
+			mapData = mashupPicker.getTop100GenreSongChartList(page, 21, genre_key);
+			mapData.put("genreVO", genreVO);
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		
+		
+		return mapData;
+		
+	}
+}

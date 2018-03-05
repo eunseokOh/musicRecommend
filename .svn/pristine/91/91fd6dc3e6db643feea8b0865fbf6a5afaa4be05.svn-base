@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="net.musicrecommend.www.user.UserMapper">
+	<insert id="insertUser" parameterType="UserVO">
+		insert into tb_user(user_id, user_pw, user_gender, user_nick, user_uuid)
+		values(#{user_id},#{user_pw},#{user_gender},#{user_nick},#{user_uuid});
+	</insert>
+
+	<select id="getUserTotalCount" resultType="int">
+		select count(*) as cnt
+		from tb_user
+	</select>
+
+	<select id="selectUserList" resultType="UserVO" parameterType="PageNation">
+		select b.*
+		from (select a.*
+		from (select @rownum:=@rownum+1 as rownum, u.*
+		from tb_user u join (select @rownum:=0) T
+		order by u.user_no desc) a) b
+		where rownum between #{start_num} and
+		#{end_num};
+	</select>
+	
+	<!-- 아이디 중복체크 -->
+	<select id="idCheck" parameterType="String" resultType="Integer">
+		select count(user_id)
+		from tb_user
+		where user_id=#{user_id}
+	</select>
+	<!-- 로그인 계정확인 -->
+	<select id="checkUser" parameterType="UserVO" resultType="UserVO">
+		select
+		user_id, user_nick, user_uuid
+		from tb_user
+		where user_id=#{user_id} and
+		user_pw=#{user_pw}
+	</select>
+
+	<!-- 카카오 계정 저장 전 중복체크 -->
+	<select id="checkCacaoUser" parameterType="UserVO" resultType="Integer">
+		select count(user_id)
+		from tb_user
+		where user_id=#{user_id}
+	</select>
+	<!-- 카카오 계정 저장 -->
+	<insert id="insertCacaoUser" parameterType="UserVO">
+		insert into
+		tb_user(user_id, user_nick, user_img)
+		values(#{user_id},#{user_nick},#{user_img})
+	</insert>
+</mapper>

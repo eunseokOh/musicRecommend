@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<mapper namespace="net.musicrecommend.www.recommend.RecommendMapper">
+	
+	<insert id="insertRecommend" parameterType="RecommendVO">
+		insert into tb_recommend(user_no, album_key, song_key, artist_key, star_point, comment)
+		values(#{user_no},#{album_key},#{song_key},#{artist_key},#{star_point},#{comment})
+		
+	</insert>
+	<update id="updateRecommend" parameterType="RecommendVO">
+		update tb_recommend set star_point=#{star_point}, comment=#{comment}
+		where user_no = #{user_no} and song_key = #{song_key}
+	</update>
+	
+	<select id="checkRecommendExist" parameterType="RecommendVO" resultType="int">
+		select count(user_no) as cnt from tb_recommend
+		where user_no = #{user_no} and song_key = #{song_key}
+	</select>
+	
+	
+	
+
+</mapper>
+ 
+ 

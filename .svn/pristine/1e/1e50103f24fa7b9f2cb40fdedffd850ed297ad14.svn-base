@@ -1,0 +1,15 @@
+package net.musicrecommend.www.user;
+
+import java.util.List;
+
+import net.musicrecommend.www.util.PageNation;
+
+public interface UserMapper {
+
+	void insertUser(UserVO userVO) throws Exception;
+
+	int getUserTotalCount() throws Exception;
+
+	List<UserVO> selectUserList(PageNation pageNation) throws Exception;
+
+}

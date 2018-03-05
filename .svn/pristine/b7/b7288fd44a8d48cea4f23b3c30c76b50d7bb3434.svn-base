@@ -1,0 +1,56 @@
+package net.musicrecommend.www.recommend;
+
+import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import net.musicrecommend.www.util.PageNation;
+import net.musicrecommend.www.vo.SongVO;
+
+@Controller
+@RequestMapping("/")
+public class RecommendController {
+	private static final Logger logger = LoggerFactory.getLogger(RecommendController.class);
+	
+	@Autowired
+	RecommendService recommendService;
+	
+	@RequestMapping(value="song/{song_key}/recommend",method = RequestMethod.GET)
+	public String getSongRecommend(RecommendVO recommendVO, @PathVariable long song_key, Model model) throws Exception{
+		SongVO songVO = recommendService.getSong(song_key);
+		model.addAttribute("songVO",songVO);
+		
+		return "recommend/insert";
+	}
+
+	@RequestMapping(value="song/{song_key}/recommend",method = RequestMethod.POST, produces="text/html")
+	@ResponseBody
+	public String insertSongRecommend(RecommendVO recommendVO) throws Exception{
+		recommendVO.setUser_no(633); //임시 userno 로그인 되면 세션만들어서 하자		
+		logger.info("recommendVO: " + recommendVO);
+		boolean result = recommendService.insertRecommend(recommendVO);
+		if(result) {
+			return "success";
+		}else{
+			return "fail";
+		}
+	}
+	
+	@RequestMapping(value="song/{page}",method=RequestMethod.GET)
+	public String defaultSongList(Model model,@RequestParam(required=false,defaultValue="") String searchKeyword, @PathVariable long page) throws Exception{
+		PageNation pageNation = new PageNation(page,recommendService.getTotalCount());
+		List<SongVO> list = recommendService.getDefaultSongList(pageNation);
+		model.addAttribute("list",list);
+		model.addAttribute("pageNation",pageNation);
+		return "recommend/song_list";		
+	}
+}

@@ -1,0 +1,51 @@
+package net.musicrecommend.www.user;
+
+import java.util.List;
+
+import javax.inject.Inject;
+
+import org.springframework.stereotype.Service;
+
+import net.musicrecommend.www.util.PageNation;
+
+@Service
+public class UserServiceImpl implements UserService{
+	
+	@Inject
+	UserMapper userMapper;
+
+	@Override
+	public void insertUser(UserVO userVO) throws Exception {
+		
+		userMapper.insertUser(userVO);
+		
+	}
+
+	@Override
+	public int getUserTotalCount() throws Exception {
+
+		return userMapper.getUserTotalCount();
+	}
+
+	@Override
+	public List<UserVO> selectUserList(PageNation pageNation) throws Exception {
+		
+		return userMapper.selectUserList(pageNation);
+	}
+
+	@Override
+	public int checkCacaoUser(UserVO cacaoUser) throws Exception {
+		return userMapper.checkCacaoUser(cacaoUser);
+	}
+
+	@Override
+	public void insertCacaoUser(UserVO userVO) throws Exception {
+		userMapper.insertCacaoUser(userVO);
+	}
+
+	@Override
+	public UserVO checkUser(UserVO user) throws Exception {
+		return userMapper.checkUser(user);
+	}
+
+}
